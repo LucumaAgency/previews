@@ -7,11 +7,14 @@ const AdmZip = require('adm-zip');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
-const DATA = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
+let DATA = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'));
+try { fs.mkdirSync(DATA, { recursive: true }); fs.accessSync(DATA, fs.constants.W_OK); }
+catch (e) { console.error(`DATA_DIR ${DATA} no utilizable (${e.message}); usando ./data`); DATA = path.join(__dirname, 'data'); }
 const TOKEN = process.env.PUSH_TOKEN || '';           // obligatorio para subir/borrar
 const VIEW_PASSWORD = process.env.VIEW_PASSWORD || ''; // opcional: protege la galería
 const MAX_MB = +(process.env.MAX_MB || 80);
 fs.mkdirSync(DATA, { recursive: true });
+process.on('uncaughtException', e => console.error('uncaught', e));
 
 const app = express();
 app.disable('x-powered-by');
