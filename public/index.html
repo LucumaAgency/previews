@@ -1,42 +1,85 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lucuma Previews</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--b:#174FCA;--n:#15171c;--g:#6b6f7a;--ln:#e6e8ee;--bg:#f4f5f8}
-*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--n);height:100vh;height:100dvh;display:grid;grid-template-columns:300px 1fr;grid-template-rows:100%;font-size:14px;overflow:hidden}
+:root{--b:#174FCA;--n:#15171c;--g:#6b6f7a;--ln:#e6e8ee;--bg:#f4f5f8;--bl:#eef2fc}
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}body{font-family:Montserrat,system-ui,sans-serif;background:var(--bg);color:var(--n);height:100vh;height:100dvh;display:grid;grid-template-columns:320px 1fr;grid-template-rows:100%;font-size:14px;overflow:hidden}
 aside{background:#fff;border-right:1px solid var(--ln);display:flex;flex-direction:column;min-height:0;height:100%}
 .brand{padding:18px 20px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}.brand i{width:30px;height:30px;border-radius:8px;background:var(--b);color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px}
 .search{padding:12px 16px;border-bottom:1px solid var(--ln)}.search input{width:100%;padding:9px 12px;border:1px solid var(--ln);border-radius:8px;font:inherit;font-size:13px}
-nav{overflow:auto;flex:1;padding:8px 0}
-.cl{padding:10px 20px 4px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--g);font-weight:600}
-.ds{text-decoration:none;display:block;padding:9px 20px 9px 20px;cursor:pointer;border-left:3px solid transparent}.ds:hover{background:var(--bg)}.ds.on{border-color:var(--b);background:#eef2fc}
-.ds b{display:block;font-weight:600}.ds small{color:var(--g);font-size:12px}
+nav{overflow:auto;flex:1;padding:8px 0 30px}
+.tree{list-style:none}.tree li{margin:0}
+.row{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;border-radius:8px;margin:1px 8px;user-select:none;text-decoration:none;color:var(--n)}.row:hover{background:var(--bg)}.row.on{background:var(--bl);color:var(--b);font-weight:600}
+.row .car{width:16px;height:16px;flex:none;transition:.2s;color:var(--g)}.row .car.open{transform:rotate(90deg)}.row .car.none{visibility:hidden}
+.row .ic{width:16px;height:16px;flex:none;color:var(--g)}.row.on .ic{color:var(--b)}
+.row b{font-weight:600}.row small{color:var(--g);font-size:11.5px;margin-left:auto;white-space:nowrap}.row.on small{color:var(--b)}
+.lvl1{padding-left:12px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--g);font-weight:700}.lvl1:hover{background:transparent}
+.lvl2{padding-left:28px}.lvl3{padding-left:48px;font-size:13px}.lvl4{padding-left:60px;font-size:12.5px;color:var(--g);font-weight:600}.lvl5{padding-left:80px;font-size:12.5px}
+.lvl4 .ic{width:14px;height:14px}.lvl5 .ic{width:14px;height:14px}
+ul[hidden]{display:none}
 main{display:flex;flex-direction:column;min-height:0;height:100%}
 .bar{background:#fff;border-bottom:1px solid var(--ln);padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .bar h1{font-size:15px;font-weight:700}.bar .nota{color:var(--g);font-size:12.5px}
-.bar select,.bar button,.bar a.btn{font:inherit;font-size:13px;padding:7px 12px;border:1px solid var(--ln);border-radius:8px;background:#fff;cursor:pointer;color:var(--n);text-decoration:none}
+.bar select,.bar button,.bar a.btn{font:inherit;font-size:13px;padding:7px 12px;border:1px solid var(--ln);border-radius:8px;background:#fff;cursor:pointer;color:var(--n);text-decoration:none;max-width:360px}
 .bar button.on{background:var(--n);color:#fff;border-color:var(--n)}.bar .sp{flex:1}.bar a.btn.p{background:var(--b);color:#fff;border-color:var(--b)}
 .dev{display:flex;gap:4px}
 .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
-.frame{flex:none;background:#fff;border:1px solid var(--ln);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.08);overflow:hidden;transition:width .3s,height .3s;width:100%;height:100%}
+.frame{flex:none;background:#fff;border:1px solid var(--ln);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.08);overflow:hidden;transition:width .3s,height .3s}
 .frame iframe{width:100%;height:100%;border:0;display:block}
 .frame.desktop{width:100%;height:100%}.frame.tablet{width:820px;height:1180px;max-height:100%;max-width:100%}.frame.mobile{width:390px;height:844px;max-height:100%;max-width:100%}
 .empty{color:var(--g);text-align:center;max-width:420px;line-height:1.6}.empty code{background:#fff;padding:2px 6px;border-radius:4px;font-size:12px}
-@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:40vh}}
+@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}}
 </style></head><body>
-<aside><div class="brand"><i>LA</i>Lucuma Previews</div><div class="search"><input id="q" placeholder="Buscar cliente o diseño…"></div><nav id="nav"></nav></aside>
-<main><div class="bar" id="bar" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="reload">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div>
+<aside><div class="brand"><i>LA</i>Lucuma Previews</div><div class="search"><input id="q" placeholder="Buscar cliente, diseño o archivo…"></div><nav><ul class="tree" id="tree"></ul></nav></aside>
+<main><div class="bar" id="bar" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div>
 <div class="stage"><div class="empty" id="empty">Sin diseños todavía.<br>Sube uno con <code>node push.js cliente diseño carpeta</code> o <code>POST /api/push</code>.</div><div class="frame desktop" id="frame" hidden><iframe id="if"></iframe></div></div></main>
 <script>
-let tree=[],cur=null;const $=s=>document.querySelector(s);
-async function load(){tree=await (await fetch('api/list')).json();render();route();}
-function render(){const q=$('#q').value.toLowerCase();let h='';for(const c of tree){const ds=c.disenos.filter(d=>!q||(c.cliente+' '+d.diseno+' '+(d.versiones[0].titulo||'')).toLowerCase().includes(q));if(!ds.length)continue;h+=`<div class="cl">${c.cliente}</div>`;for(const d of ds){const v=d.versiones[0];const on=cur&&cur.c===c.cliente&&cur.d===d.diseno?' on':'';h+=`<a class="ds${on}" href="#/${c.cliente}/${d.diseno}/${v.v}"><b>${v.titulo||d.diseno}</b><small>${d.versiones.length} versión${d.versiones.length>1?'es':''} · ${new Date(v.createdAt).toLocaleDateString('es-PE',{day:'2-digit',month:'short'})}</small></a>`}}$('#nav').innerHTML=h||'<div class="cl">Nada que mostrar</div>';}
-function route(){const m=location.hash.match(/^#\/([^/]+)\/([^/]+)\/(v\d+)?\/?(.*)$/);if(!m){cur=null;return}const c=tree.find(x=>x.cliente===m[1]);const d=c&&c.disenos.find(x=>x.diseno===m[2]);if(!d)return;const v=d.versiones.find(x=>x.v===m[3])||d.versiones[0];const entry=m[4]&&v.htmls.includes(m[4])?m[4]:v.entry;cur={c:c.cliente,d:d.diseno,v,entry};show(d);render();}
-function show(d){const {c,v,entry}=cur;$('#bar').hidden=false;$('#empty').hidden=true;$('#frame').hidden=false;$('#t').textContent=(v.titulo||cur.d)+' · '+c;$('#nota').textContent=v.nota?v.nota+' · ':''; $('#nota').textContent+=new Date(v.createdAt).toLocaleString('es-PE');
+const $=s=>document.querySelector(s);const CAR='<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>';
+const IC={c:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>',d:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8"/></svg>',v:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',f:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/></svg>',g:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>'};
+let tree=[],cur=null,open={};try{open=JSON.parse(localStorage.getItem('pv-open')||'{}')}catch{}
+const save=()=>{try{localStorage.setItem('pv-open',JSON.stringify(open))}catch{}};
+async function load(){tree=await (await fetch('api/list')).json();route();render();}
+function groups(v){const g={};for(const h of v.htmls){const parts=h.split('/');const k=parts.length>1?parts[0]:'';(g[k]=g[k]||[]).push(h)}return g}
+function render(){
+  const q=$('#q').value.toLowerCase().trim();let h='';
+  for(const c of tree){
+    const ds=c.disenos.filter(d=>!q||(c.cliente+' '+d.diseno+' '+d.versiones.map(v=>(v.titulo||'')+' '+v.htmls.join(' ')).join(' ')).toLowerCase().includes(q));
+    if(!ds.length)continue;
+    const kc='c:'+c.cliente,oc=open[kc]!==false||!!q;
+    h+=`<li><div class="row lvl1" data-k="${kc}">${CAR.replace('class="car"','class="car'+(oc?' open':'')+'"')}${c.cliente}<small>${ds.length}</small></div><ul ${oc?'':'hidden'}>`;
+    for(const d of ds){
+      const kd='d:'+c.cliente+'/'+d.diseno,isCur=cur&&cur.c===c.cliente&&cur.d===d.diseno,od=open[kd]??isCur;
+      const last=d.versiones[0];
+      h+=`<li><div class="row lvl2 ${isCur?'on':''}" data-k="${kd}" data-go="#/${c.cliente}/${d.diseno}/${last.v}">${CAR.replace('class="car"','class="car'+(od?' open':'')+'"')}${IC.d}<b>${last.titulo||d.diseno}</b><small>${d.versiones.length} v</small></div><ul ${od?'':'hidden'}>`;
+      for(const v of d.versiones){
+        const kv='v:'+c.cliente+'/'+d.diseno+'/'+v.v,isV=isCur&&cur.v.v===v.v,ov=open[kv]??isV;
+        h+=`<li><div class="row lvl3 ${isV?'on':''}" data-k="${kv}" data-go="#/${c.cliente}/${d.diseno}/${v.v}">${CAR.replace('class="car"','class="car'+(ov?' open':'')+'"')}${IC.v}${v.v}${v===last?' <span style="font-size:10px;color:var(--g)">última</span>':''}<small>${new Date(v.createdAt).toLocaleDateString('es-PE',{day:'2-digit',month:'short'})}</small></div><ul ${ov?'':'hidden'}>`;
+        const g=groups(v);
+        for(const k of Object.keys(g).sort((a,b)=>(a===''?-1:b===''?1:a.localeCompare(b)))){
+          if(k){const kg='g:'+kv+'/'+k,og=open[kg]??true;h+=`<li><div class="row lvl4" data-k="${kg}">${CAR.replace('class="car"','class="car'+(og?' open':'')+'"')}${IC.g}${k}</div><ul ${og?'':'hidden'}>`}
+          for(const f of g[k]){const on=isV&&cur.entry===f;h+=`<li><a class="row ${k?'lvl5':'lvl4'} ${on?'on':''}" href="#/${c.cliente}/${d.diseno}/${v.v}/${f}">${CAR.replace('class="car"','class="car none"')}${IC.f}${f.split('/').pop()}</a></li>`}
+          if(k)h+='</ul></li>';
+        }
+        h+='</ul></li>';
+      }
+      h+='</ul></li>';
+    }
+    h+='</ul></li>';
+  }
+  $('#tree').innerHTML=h||'<li class="row lvl1">Nada que mostrar</li>';
+  document.querySelectorAll('.row[data-k]').forEach(r=>r.onclick=e=>{const ul=r.nextElementSibling;const car=r.querySelector('.car');const willOpen=ul.hidden;
+    if(e.target.closest('.car')||!r.dataset.go){ul.hidden=!willOpen;car.classList.toggle('open',willOpen);open[r.dataset.k]=willOpen;save();}
+    else{open[r.dataset.k]=true;save();location.hash=r.dataset.go}});
+}
+function route(){const m=location.hash.match(/^#\/([^/]+)\/([^/]+)\/(v\d+)?\/?(.*)$/);if(!m){cur=null;return}const c=tree.find(x=>x.cliente===m[1]);const d=c&&c.disenos.find(x=>x.diseno===m[2]);if(!d)return;const v=d.versiones.find(x=>x.v===m[3])||d.versiones[0];const entry=m[4]&&v.htmls.includes(m[4])?m[4]:v.entry;cur={c:c.cliente,d:d.diseno,v,entry};open['c:'+c.cliente]=true;open['d:'+c.cliente+'/'+d.diseno]=true;open['v:'+c.cliente+'/'+d.diseno+'/'+v.v]=true;save();show(d);render();}
+let lastSrc='';
+function show(d){const {c,v,entry}=cur;$('#bar').hidden=false;$('#empty').hidden=true;$('#frame').hidden=false;$('#t').textContent=(v.titulo||cur.d)+' · '+c+' · '+v.v;$('#nota').textContent=(v.nota?v.nota+' · ':'')+new Date(v.createdAt).toLocaleString('es-PE');
 $('#ver').innerHTML=d.versiones.map(x=>`<option value="${x.v}"${x.v===v.v?' selected':''}>${x.v}${x===d.versiones[0]?' (última)':''}</option>`).join('');
 $('#entry').innerHTML=v.htmls.map(h=>`<option${h===entry?' selected':''}>${h}</option>`).join('');
-const src=`p/${c}/${cur.d}/${v.v}/${entry}`;$('#if').src=src;$('#open').href=src;}
+const src=`p/${c}/${cur.d}/${v.v}/${entry}`;$('#open').href=src;if(src!==lastSrc){lastSrc=src;$('#if').src=src}}
+/* sincroniza navegación dentro del iframe (enlaces del index de propuestas) */
+$('#if').addEventListener('load',()=>{try{const p=$('#if').contentWindow.location.pathname;const m=p.match(/\/p\/([^/]+)\/([^/]+)\/(v\d+)\/(.*)$/);if(!m)return;const f=decodeURIComponent(m[4]);if(cur&&cur.c===m[1]&&cur.d===m[2]&&cur.v.v===m[3]&&cur.entry===f)return;lastSrc=`p/${m[1]}/${m[2]}/${m[3]}/${f}`;location.hash=`#/${m[1]}/${m[2]}/${m[3]}/${f}`}catch{}});
 $('#ver').onchange=e=>location.hash=`#/${cur.c}/${cur.d}/${e.target.value}`;$('#entry').onchange=e=>location.hash=`#/${cur.c}/${cur.d}/${cur.v.v}/${e.target.value}`;
-$('#reload').onclick=()=>{$('#if').src=$('#if').src};$('#q').oninput=render;
+$('#reload').onclick=()=>{$('#if').contentWindow.location.reload()};$('#back').onclick=()=>{try{$('#if').contentWindow.history.back()}catch{}};$('#q').oninput=render;
 document.querySelectorAll('.dev button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#frame').className='frame '+b.dataset.d});
-addEventListener('hashchange',route);load();
+addEventListener('hashchange',()=>{route()});load();
 </script></body></html>
