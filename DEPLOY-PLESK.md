@@ -3,7 +3,7 @@
 Mismo patrón que scrabble / pitch-monitor.
 
 1. **Subdominio**: crear `previews.pruebalucuma.site` (o el que prefieras).
-2. **Git**: repo `https://github.com/LucumaAgency/lucuma-previews.git`, rama `main`, despliegue manual.
+2. **Git**: repo `https://github.com/LucumaAgency/previews.git`, rama `main`, despliegue manual.
    Raíz del documento = raíz de la app = carpeta donde clona.
 3. **Node.js**: versión 20 o 22, npm, modo `production`, **archivo de inicio `app.cjs`**.
 4. **Variables de entorno personalizadas**:
