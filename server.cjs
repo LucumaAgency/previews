@@ -72,7 +72,7 @@ app.post('/api/push', pushAuth, express.raw({ type: '*/*', limit: MAX_MB + 'mb' 
     let entry = req.query.entry && htmls.includes(req.query.entry) ? req.query.entry : (htmls.find(h => /(^|\/)index\.html$/.test(h)) || htmls[0] || '');
     const meta = { cliente, diseno, version: n, nota: String(req.query.nota || ''), titulo: String(req.query.titulo || ''), entry, htmls, files, createdAt: new Date().toISOString() };
     fs.writeFileSync(path.join(dir, '.meta.json'), JSON.stringify(meta, null, 1));
-    const url = `${req.protocol}://${req.get('host')}`;
+    const url = `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}`;
     res.json({ ok: true, ...meta, url: `${url}/#/${cliente}/${diseno}/v${n}`, direct: `${url}/p/${cliente}/${diseno}/v${n}/${entry}` });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
