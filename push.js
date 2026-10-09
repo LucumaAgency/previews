@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 // Sube una carpeta de HTML a Lucuma Previews.
 // Uso: node push.js <cliente> <diseño> <carpeta> [--nota "texto"] [--titulo "Nombre"] [--entry index.html] [--replace]
+//      node push.js acceso <cliente> [--renew] · accesos · revocar <cliente>   (enlaces para que un cliente vea solo su carpeta)
 // Config: ~/.previews.env con PREVIEWS_URL=https://... y PREVIEWS_TOKEN=...
 const fs = require('fs'), path = require('path'), os = require('os');
 const AdmZip = require(path.join(__dirname, 'node_modules', 'adm-zip'));
 const args = process.argv.slice(2), opt = {};
 const pos = [];
-for (let i = 0; i < args.length; i++) { if (args[i].startsWith('--')) { const k = args[i].slice(2); if (k === 'replace') opt[k] = '1'; else opt[k] = args[++i]; } else pos.push(args[i]); }
+for (let i = 0; i < args.length; i++) { if (args[i].startsWith('--')) { const k = args[i].slice(2); if (k === 'replace' || k === 'renew') opt[k] = '1'; else opt[k] = args[++i]; } else pos.push(args[i]); }
+const env = {}; try { for (const l of fs.readFileSync(path.join(os.homedir(), '.previews.env'), 'utf8').split('\n')) { const m = l.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/); if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, ''); } } catch { }
+const URL_ = (process.env.PREVIEWS_URL || env.PREVIEWS_URL || '').replace(/\/$/, ''), TOKEN = process.env.PREVIEWS_TOKEN || env.PREVIEWS_TOKEN;
+if (!URL_ || !TOKEN) { console.error('Falta PREVIEWS_URL / PREVIEWS_TOKEN (en ~/.previews.env)'); process.exit(1); }
+const api = (m, p) => fetch(URL_ + p, { method: m, headers: { Authorization: 'Bearer ' + TOKEN } }).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j; });
+// Accesos por cliente: node push.js acceso <cliente> [--renew] | node push.js accesos | node push.js revocar <cliente>
+if (pos[0] === 'acceso' && pos[1]) { api('POST', `/api/clients/${pos[1]}${opt.renew ? '?renew=1' : ''}`).then(j => console.log(`✔ Enlace para ${j.cliente} (ve solo esa carpeta):\n   ${j.link}` + (j.viewPassword ? '' : '\n   ⚠ VIEW_PASSWORD no está definida en Plesk: la galería sigue siendo pública para todos.'))).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
+if (pos[0] === 'accesos') { api('GET', '/api/clients').then(l => console.log(l.length ? l.map(c => `${c.cliente}  ${c.link}  (${c.createdAt.slice(0, 10)})`).join('\n') : '(sin accesos)')).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
+if (pos[0] === 'revocar' && pos[1]) { api('DELETE', `/api/clients/${pos[1]}`).then(() => console.log(`✔ Acceso de ${pos[1]} revocado`)).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 const [cliente, diseno, folder] = pos;
 if (!folder) { console.error('Uso: node push.js <cliente> <diseño> <carpeta> [--nota ..] [--titulo ..] [--entry ..] [--replace]'); process.exit(1); }
-const env = {}; try { for (const l of fs.readFileSync(path.join(os.homedir(), '.previews.env'), 'utf8').split('\n')) { const m = l.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/); if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, ''); } } catch { }
-const URL_ = process.env.PREVIEWS_URL || env.PREVIEWS_URL, TOKEN = process.env.PREVIEWS_TOKEN || env.PREVIEWS_TOKEN;
-if (!URL_ || !TOKEN) { console.error('Falta PREVIEWS_URL / PREVIEWS_TOKEN (en ~/.previews.env)'); process.exit(1); }
 const EXCL = /(^|\/)(node_modules|\.git|build|__pycache__)(\/|$)|\.(mp4|mov|zip|psd|ai|pdf)$|(^|\/)\.[^/]+$/i;
 const MAX = +(opt.max || 15) * 1024 * 1024; // omite archivos individuales > 15 MB
 const zip = new AdmZip(); let n = 0, skipped = [];
@@ -19,6 +25,6 @@ const zip = new AdmZip(); let n = 0, skipped = [];
 const buf = zip.toBuffer();
 const q = new URLSearchParams({ cliente, diseno, ...(opt.nota && { nota: opt.nota }), ...(opt.titulo && { titulo: opt.titulo }), ...(opt.entry && { entry: opt.entry }), ...(opt.replace && { replace: '1' }) });
 console.error(`Subiendo ${n} archivos (${(buf.length / 1048576).toFixed(1)} MB)` + (skipped.length ? `, omitidos: ${skipped.slice(0, 5).join(', ')}${skipped.length > 5 ? '…' : ''}` : ''));
-fetch(`${URL_.replace(/\/$/, '')}/api/push?${q}`, { method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/zip' }, body: buf })
+fetch(`${URL_}/api/push?${q}`, { method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/zip' }, body: buf })
   .then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); console.log(`✔ ${j.cliente}/${j.diseno} ${'v' + j.version} · ${j.files} archivos\n   Galería: ${j.url}\n   Directo: ${j.direct}`); })
   .catch(e => { console.error('✖', e.message); process.exit(1); });

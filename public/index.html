@@ -35,9 +35,9 @@ main{display:flex;flex-direction:column;min-height:0;height:100%}
 <script>
 const $=s=>document.querySelector(s);const CAR='<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>';
 const IC={c:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>',d:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8"/></svg>',v:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',f:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/></svg>',g:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>'};
-let tree=[],cur=null,open={};try{open=JSON.parse(localStorage.getItem('pv-open')||'{}')}catch{}
+let tree=[],cur=null,open={},scope='all';try{open=JSON.parse(localStorage.getItem('pv-open')||'{}')}catch{}
 const save=()=>{try{localStorage.setItem('pv-open',JSON.stringify(open))}catch{}};
-async function load(){tree=await (await fetch('api/list')).json();route();render();}
+async function load(){const r=await (await fetch('api/list')).json();tree=r.tree||r;scope=r.scope||'all';if(scope!=='all')document.body.classList.add('client');route();render();}
 function groups(v){const g={};for(const h of v.htmls){const parts=h.split('/');const k=parts.length>1?parts[0]:'';(g[k]=g[k]||[]).push(h)}return g}
 function render(){
   const q=$('#q').value.toLowerCase().trim();let h='';
