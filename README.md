@@ -48,4 +48,4 @@ node push.js accesos               # lista los enlaces activos
 node push.js revocar proba         # elimina el acceso
 ```
 
-El cliente abre el enlace una vez, queda con cookie de un año y ve la galería filtrada: solo `proba` en el sidebar, y `/p/otro-cliente/...` responde 403. Tú entras con la contraseña y ves todo. API: `GET/POST/DELETE /api/clients[/:cliente]` con el `PUSH_TOKEN`. Las claves viven en `DATA_DIR/.clients.json`.
+El cliente abre el enlace una vez, queda con cookie de un año y ve la galería filtrada: solo `proba` en el sidebar, y `/p/otro-cliente/...` responde 403. Tú entras con la contraseña y ves todo. Para esconderle versiones viejas: `node push.js ocultar proba s3-senda-proba v3` (y `mostrar` para revertir); el dueño las sigue viendo. API: `GET/POST/DELETE /api/clients[/:cliente]` con el `PUSH_TOKEN`. Las claves viven en `DATA_DIR/.clients.json`.

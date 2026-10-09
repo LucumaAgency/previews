@@ -114,7 +114,7 @@ app.delete('/api/:cliente/:diseno{/:v}', pushAuth, (req, res) => {
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 app.patch('/api/:cliente/:diseno/:v', pushAuth, express.json(), (req, res) => {
-  try { const d = safe(path.join(slug(req.params.cliente), slug(req.params.diseno), slug(req.params.v))); const m = readMeta(d); Object.assign(m, { nota: req.body.nota ?? m.nota, titulo: req.body.titulo ?? m.titulo, entry: req.body.entry ?? m.entry }); fs.writeFileSync(path.join(d, '.meta.json'), JSON.stringify(m, null, 1)); res.json({ ok: true, ...m }); }
+  try { const d = safe(path.join(slug(req.params.cliente), slug(req.params.diseno), slug(req.params.v))); const m = readMeta(d); Object.assign(m, { nota: req.body.nota ?? m.nota, titulo: req.body.titulo ?? m.titulo, entry: req.body.entry ?? m.entry, oculta: req.body.oculta ?? m.oculta }); fs.writeFileSync(path.join(d, '.meta.json'), JSON.stringify(m, null, 1)); res.json({ ok: true, ...m }); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 // Listado (árbol) para la galería (filtrado según el acceso)
@@ -124,7 +124,7 @@ app.get('/api/list', (req, res) => {
     const disenos = [];
     for (const d of fs.readdirSync(path.join(DATA, c.name), { withFileTypes: true }).filter(x => x.isDirectory())) {
       const vs = fs.readdirSync(path.join(DATA, c.name, d.name)).filter(v => /^v\d+$/.test(v)).sort((a, b) => +b.slice(1) - +a.slice(1))
-        .map(v => ({ v, ...readMeta(path.join(DATA, c.name, d.name, v)) }));
+        .map(v => ({ v, ...readMeta(path.join(DATA, c.name, d.name, v)) })).filter(v => req.scope === 'all' || !v.oculta);  // versiones ocultas: solo las ve el dueño
       if (vs.length) disenos.push({ diseno: d.name, versiones: vs, updatedAt: vs[0].createdAt });
     }
     disenos.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
@@ -134,7 +134,7 @@ app.get('/api/list', (req, res) => {
   res.json({ scope: req.scope, tree });
 });
 // Archivos de cada versión
-app.use('/p', (req, res, next) => { if (req.scope === 'all' || req.path.split('/')[1] === req.scope) return next(); res.status(403).send('Sin acceso a esta carpeta'); });
+app.use('/p', (req, res, next) => { if (req.scope === 'all') return next(); const [, c, d, v] = req.path.split('/'); if (c !== req.scope) return res.status(403).send('Sin acceso a esta carpeta'); try { if (d && v && readMeta(safe(path.join(c, d, v))).oculta) return res.status(403).send('Versión no disponible'); } catch { } next(); });
 app.use('/p', express.static(DATA, { index: ['index.html'], dotfiles: 'deny', extensions: ['html'] }));
 // Galería
 app.use(express.static(path.join(__dirname, 'public')));
