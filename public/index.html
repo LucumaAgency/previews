@@ -27,10 +27,12 @@ main{display:flex;flex-direction:column;min-height:0;height:100%}
 .frame iframe{width:100%;height:100%;border:0;display:block}
 .frame.desktop{width:100%;height:100%}.frame.tablet{width:820px;height:1180px;max-height:100%;max-width:100%}.frame.mobile{width:390px;height:844px;max-height:100%;max-width:100%}
 .empty{color:var(--g);text-align:center;max-width:420px;line-height:1.6}.empty code{background:#fff;padding:2px 6px;border-radius:4px;font-size:12px}
-@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}}
+body.nosb{grid-template-columns:0 1fr}body.nosb aside{display:none}
+#sb svg{width:16px;height:16px;display:block}
+@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}body.nosb{grid-template-columns:1fr;grid-template-rows:0 1fr}}
 </style></head><body>
 <aside><div class="brand"><i>LA</i>Lucuma Previews</div><div class="search"><input id="q" placeholder="Buscar cliente, diseño o archivo…"></div><nav><ul class="tree" id="tree"></ul></nav></aside>
-<main><div class="bar" id="bar" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div>
+<main><div class="bar" id="bar" hidden><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div>
 <div class="stage"><div class="empty" id="empty">Sin diseños todavía.<br>Sube uno con <code>node push.js cliente diseño carpeta</code> o <code>POST /api/push</code>.</div><div class="frame desktop" id="frame" hidden><iframe id="if"></iframe></div></div></main>
 <script>
 const $=s=>document.querySelector(s);const CAR='<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>';
@@ -81,5 +83,9 @@ $('#if').addEventListener('load',()=>{try{const p=$('#if').contentWindow.locatio
 $('#ver').onchange=e=>location.hash=`#/${cur.c}/${cur.d}/${e.target.value}`;$('#entry').onchange=e=>location.hash=`#/${cur.c}/${cur.d}/${cur.v.v}/${e.target.value}`;
 $('#reload').onclick=()=>{$('#if').contentWindow.location.reload()};$('#back').onclick=()=>{try{$('#if').contentWindow.history.back()}catch{}};$('#q').oninput=render;
 document.querySelectorAll('.dev button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#frame').className='frame '+b.dataset.d});
+const setSb=h=>{document.body.classList.toggle('nosb',h);try{localStorage.setItem('pv-nosb',h?'1':'')}catch{}};
+try{if(localStorage.getItem('pv-nosb'))document.body.classList.add('nosb')}catch{}
+$('#sb').onclick=()=>setSb(!document.body.classList.contains('nosb'));
+addEventListener('keydown',e=>{if(e.key==='\\'&&!e.target.closest('input,select,textarea'))setSb(!document.body.classList.contains('nosb'))});
 addEventListener('hashchange',()=>{route()});load();
 </script></body></html>
