@@ -27,12 +27,12 @@ main{display:flex;flex-direction:column;min-height:0;height:100%}
 .frame iframe{width:100%;height:100%;border:0;display:block}
 .frame.desktop{width:100%;height:100%}.frame.tablet{width:820px;height:1180px;max-height:100%;max-width:100%}.frame.mobile{width:390px;height:844px;max-height:100%;max-width:100%}
 .empty{color:var(--g);text-align:center;max-width:420px;line-height:1.6}.empty code{background:#fff;padding:2px 6px;border-radius:4px;font-size:12px}
-body.nosb{grid-template-columns:0 1fr}body.nosb aside{display:none}
+body.nosb{grid-template-columns:1fr}body.nosb aside{display:none}#barc{display:contents}#barc[hidden]{display:none}
 #sb svg{width:16px;height:16px;display:block}
-@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}body.nosb{grid-template-columns:1fr;grid-template-rows:0 1fr}}
+@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}body.nosb{grid-template-rows:1fr}}
 </style></head><body>
 <aside><div class="brand"><i>LA</i>Lucuma Previews</div><div class="search"><input id="q" placeholder="Buscar cliente, diseño o archivo…"></div><nav><ul class="tree" id="tree"></ul></nav></aside>
-<main><div class="bar" id="bar" hidden><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div>
+<main><div class="bar" id="bar"><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div id="barc" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div></div>
 <div class="stage"><div class="empty" id="empty">Sin diseños todavía.<br>Sube uno con <code>node push.js cliente diseño carpeta</code> o <code>POST /api/push</code>.</div><div class="frame desktop" id="frame" hidden><iframe id="if"></iframe></div></div></main>
 <script>
 const $=s=>document.querySelector(s);const CAR='<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>';
@@ -74,7 +74,7 @@ function render(){
 }
 function route(){const m=location.hash.match(/^#\/([^/]+)\/([^/]+)\/(v\d+)?\/?(.*)$/);if(!m){cur=null;return}const c=tree.find(x=>x.cliente===m[1]);const d=c&&c.disenos.find(x=>x.diseno===m[2]);if(!d)return;const v=d.versiones.find(x=>x.v===m[3])||d.versiones[0];const entry=m[4]&&v.htmls.includes(m[4])?m[4]:v.entry;cur={c:c.cliente,d:d.diseno,v,entry};open['c:'+c.cliente]=true;open['d:'+c.cliente+'/'+d.diseno]=true;open['v:'+c.cliente+'/'+d.diseno+'/'+v.v]=true;save();show(d);render();}
 let lastSrc='';
-function show(d){const {c,v,entry}=cur;$('#bar').hidden=false;$('#empty').hidden=true;$('#frame').hidden=false;$('#t').textContent=(v.titulo||cur.d)+' · '+c+' · '+v.v;$('#nota').textContent=(v.nota?v.nota+' · ':'')+new Date(v.createdAt).toLocaleString('es-PE');
+function show(d){const {c,v,entry}=cur;$('#barc').hidden=false;$('#empty').hidden=true;$('#frame').hidden=false;$('#t').textContent=(v.titulo||cur.d)+' · '+c+' · '+v.v;$('#nota').textContent=(v.nota?v.nota+' · ':'')+new Date(v.createdAt).toLocaleString('es-PE');
 $('#ver').innerHTML=d.versiones.map(x=>`<option value="${x.v}"${x.v===v.v?' selected':''}>${x.v}${x===d.versiones[0]?' (última)':''}</option>`).join('');
 $('#entry').innerHTML=v.htmls.map(h=>`<option${h===entry?' selected':''}>${h}</option>`).join('');
 const src=`p/${c}/${cur.d}/${v.v}/${entry}`;$('#open').href=src;if(src!==lastSrc){lastSrc=src;$('#if').src=src}}
