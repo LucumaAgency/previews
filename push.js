@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Sube una carpeta de HTML a Lucuma Previews.
 // Uso: node push.js <cliente> <diseño> <carpeta> [--nota "texto"] [--titulo "Nombre"] [--entry index.html] [--replace]
-//      node push.js acceso <cliente> [--renew] · accesos · revocar <cliente>   (enlaces para que un cliente vea solo su carpeta)
+//      node push.js acceso <cliente>[/<diseño>] [--renew] · accesos · revocar <cliente>[/<diseño>]   (enlace que deja ver solo esa carpeta)
 //      node push.js ocultar|mostrar <cliente> <diseño> <vN>   (versión invisible para el cliente, el dueño la sigue viendo)
 // Config: ~/.previews.env con PREVIEWS_URL=https://... y PREVIEWS_TOKEN=...
 const fs = require('fs'), path = require('path'), os = require('os');
@@ -14,8 +14,8 @@ const URL_ = (process.env.PREVIEWS_URL || env.PREVIEWS_URL || '').replace(/\/$/,
 if (!URL_ || !TOKEN) { console.error('Falta PREVIEWS_URL / PREVIEWS_TOKEN (en ~/.previews.env)'); process.exit(1); }
 const api = (m, p) => fetch(URL_ + p, { method: m, headers: { Authorization: 'Bearer ' + TOKEN } }).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j; });
 // Accesos por cliente: node push.js acceso <cliente> [--renew] | node push.js accesos | node push.js revocar <cliente>
-if (pos[0] === 'acceso' && pos[1]) { api('POST', `/api/clients/${pos[1]}${opt.renew ? '?renew=1' : ''}`).then(j => console.log(`✔ Enlace para ${j.cliente} (ve solo esa carpeta):\n   ${j.link}` + (j.viewPassword ? '' : '\n   ⚠ VIEW_PASSWORD no está definida en Plesk: la galería sigue siendo pública para todos.'))).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
-if (pos[0] === 'accesos') { api('GET', '/api/clients').then(l => console.log(l.length ? l.map(c => `${c.cliente}  ${c.link}  (${c.createdAt.slice(0, 10)})`).join('\n') : '(sin accesos)')).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
+if (pos[0] === 'acceso' && pos[1]) { api('POST', `/api/clients/${pos[1]}${opt.renew ? '?renew=1' : ''}`).then(j => console.log(`✔ Enlace para ${j.carpeta} (ve solo esa carpeta):\n   ${j.link}` + (j.viewPassword ? '' : '\n   ⚠ VIEW_PASSWORD no está definida en Plesk: la galería sigue siendo pública para todos.'))).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
+if (pos[0] === 'accesos') { api('GET', '/api/clients').then(l => console.log(l.length ? l.map(c => `${c.carpeta}  ${c.link}  (${c.createdAt.slice(0, 10)})`).join('\n') : '(sin accesos)')).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 if (pos[0] === 'revocar' && pos[1]) { api('DELETE', `/api/clients/${pos[1]}`).then(() => console.log(`✔ Acceso de ${pos[1]} revocado`)).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 if ((pos[0] === 'ocultar' || pos[0] === 'mostrar') && pos[3]) { fetch(`${URL_}/api/${pos[1]}/${pos[2]}/${pos[3]}`, { method: 'PATCH', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ oculta: pos[0] === 'ocultar' }) }).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); console.log(`✔ ${pos[1]}/${pos[2]} ${pos[3]} ${j.oculta ? 'oculta para el cliente' : 'visible'}`); }).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 const [cliente, diseno, folder] = pos;

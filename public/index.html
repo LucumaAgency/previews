@@ -29,17 +29,33 @@ main{display:flex;flex-direction:column;min-height:0;height:100%}
 .empty{color:var(--g);text-align:center;max-width:420px;line-height:1.6}.empty code{background:#fff;padding:2px 6px;border-radius:4px;font-size:12px}
 body.nosb{grid-template-columns:1fr}body.nosb aside{display:none}#barc{display:contents}#barc[hidden]{display:none}
 #sb svg{width:16px;height:16px;display:block}
+/* compartir */
+.sh{flex:none;border:0;background:none;padding:3px;border-radius:6px;cursor:pointer;color:var(--g);opacity:0;display:grid;place-items:center}.sh svg{width:15px;height:15px}
+.row:hover .sh,.sh.act{opacity:1}.sh.act{color:var(--b)}.sh:hover{background:var(--bl);color:var(--b)}@media(hover:none){.sh{opacity:1}}
+#shb{display:none}body.owner #shb{display:inline-block}
+.mod{position:fixed;inset:0;background:rgba(21,23,28,.35);display:grid;place-items:center;z-index:9;padding:16px}.mod[hidden]{display:none}
+.box{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);width:min(560px,100%);max-height:90vh;overflow:auto;padding:24px;display:grid;gap:14px}
+.box h2{font-size:17px}.box p{color:var(--g);line-height:1.55;font-size:13px}.box .x{justify-self:end;border:0;background:none;font-size:20px;cursor:pointer;color:var(--g);margin:-10px -8px -18px 0}
+.lk{display:flex;gap:8px}.lk input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--ln);border-radius:8px;font:inherit;font-size:12.5px;background:var(--bg)}
+.box button.b{font:inherit;font-size:13px;font-weight:600;padding:9px 14px;border-radius:8px;border:1px solid var(--ln);background:#fff;cursor:pointer;color:var(--n)}.box button.b.p{background:var(--b);border-color:var(--b);color:#fff}.box button.b.r{color:#b00}
+.acts{display:flex;gap:8px;flex-wrap:wrap}.all{border-top:1px solid var(--ln);padding-top:12px;display:grid;gap:6px}.all b{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--g)}
+.all div{display:flex;align-items:center;gap:8px;font-size:12.5px}.all div span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.all div a{color:var(--b);cursor:pointer;font-weight:600}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--n);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;z-index:10}
 @media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}body.nosb{grid-template-rows:1fr}}
 </style></head><body>
 <aside><div class="brand"><i>LA</i>Lucuma Previews</div><div class="search"><input id="q" placeholder="Buscar cliente, diseño o archivo…"></div><nav><ul class="tree" id="tree"></ul></nav></aside>
-<main><div class="bar" id="bar"><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div id="barc" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div></div>
+<main><div class="bar" id="bar"><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div id="barc" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><button id="shb" title="Generar enlace para compartir este diseño">Compartir</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div></div>
 <div class="stage"><div class="empty" id="empty">Sin diseños todavía.<br>Sube uno con <code>node push.js cliente diseño carpeta</code> o <code>POST /api/push</code>.</div><div class="frame desktop" id="frame" hidden><iframe id="if"></iframe></div></div></main>
+<div class="mod" id="mod" hidden><div class="box" id="box"></div></div>
 <script>
 const $=s=>document.querySelector(s);const CAR='<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>';
 const IC={c:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>',d:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8"/></svg>',v:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>',f:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v4h4"/></svg>',g:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10H3z"/></svg>'};
-let tree=[],cur=null,open={},scope='all';try{open=JSON.parse(localStorage.getItem('pv-open')||'{}')}catch{}
+const SH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
+let tree=[],cur=null,open={},scope='all',canShare=false,shares={};try{open=JSON.parse(localStorage.getItem('pv-open')||'{}')}catch{}
 const save=()=>{try{localStorage.setItem('pv-open',JSON.stringify(open))}catch{}};
-async function load(){const r=await (await fetch('api/list')).json();tree=r.tree||r;scope=r.scope||'all';if(scope!=='all')document.body.classList.add('client');route();render();}
+async function load(){const r=await (await fetch('api/list')).json();tree=r.tree||r;scope=r.scope||'all';canShare=!!r.canShare;if(scope!=='all')document.body.classList.add('client');document.body.classList.toggle('owner',canShare);if(canShare)await loadShares();route();render();}
+async function loadShares(){try{const l=await (await fetch('api/clients')).json();shares={};for(const x of l)shares[x.carpeta]=x}catch{}}
+const shBtn=sc=>canShare?`<button class="sh${shares[sc]?' act':''}" data-sh="${sc}" title="${shares[sc]?'Compartida · ver enlace':'Compartir esta carpeta'}">${SH}</button>`:'';
 function groups(v){const g={};for(const h of v.htmls){const parts=h.split('/');const k=parts.length>1?parts[0]:'';(g[k]=g[k]||[]).push(h)}return g}
 function render(){
   const q=$('#q').value.toLowerCase().trim();let h='';
@@ -47,11 +63,11 @@ function render(){
     const ds=c.disenos.filter(d=>!q||(c.cliente+' '+d.diseno+' '+d.versiones.map(v=>(v.titulo||'')+' '+v.htmls.join(' ')).join(' ')).toLowerCase().includes(q));
     if(!ds.length)continue;
     const kc='c:'+c.cliente,oc=open[kc]!==false||!!q;
-    h+=`<li><div class="row lvl1" data-k="${kc}">${CAR.replace('class="car"','class="car'+(oc?' open':'')+'"')}${c.cliente}<small>${ds.length}</small></div><ul ${oc?'':'hidden'}>`;
+    h+=`<li><div class="row lvl1" data-k="${kc}">${CAR.replace('class="car"','class="car'+(oc?' open':'')+'"')}${c.cliente}<small>${ds.length}</small>${shBtn(c.cliente)}</div><ul ${oc?'':'hidden'}>`;
     for(const d of ds){
       const kd='d:'+c.cliente+'/'+d.diseno,isCur=cur&&cur.c===c.cliente&&cur.d===d.diseno,od=open[kd]??isCur;
       const last=d.versiones[0];
-      h+=`<li><div class="row lvl2 ${isCur?'on':''}" data-k="${kd}" data-go="#/${c.cliente}/${d.diseno}/${last.v}">${CAR.replace('class="car"','class="car'+(od?' open':'')+'"')}${IC.d}<b>${last.titulo||d.diseno}</b><small>${d.versiones.length} v</small></div><ul ${od?'':'hidden'}>`;
+      h+=`<li><div class="row lvl2 ${isCur?'on':''}" data-k="${kd}" data-go="#/${c.cliente}/${d.diseno}/${last.v}">${CAR.replace('class="car"','class="car'+(od?' open':'')+'"')}${IC.d}<b>${last.titulo||d.diseno}</b><small>${d.versiones.length} v</small>${shBtn(c.cliente+'/'+d.diseno)}</div><ul ${od?'':'hidden'}>`;
       for(const v of d.versiones){
         const kv='v:'+c.cliente+'/'+d.diseno+'/'+v.v,isV=isCur&&cur.v.v===v.v,ov=open[kv]??isV;
         h+=`<li><div class="row lvl3 ${isV?'on':''}" data-k="${kv}" data-go="#/${c.cliente}/${d.diseno}/${v.v}">${CAR.replace('class="car"','class="car'+(ov?' open':'')+'"')}${IC.v}${v.v}${v===last?' <span style="font-size:10px;color:var(--g)">última</span>':''}<small>${new Date(v.createdAt).toLocaleDateString('es-PE',{day:'2-digit',month:'short'})}</small></div><ul ${ov?'':'hidden'}>`;
@@ -68,6 +84,7 @@ function render(){
     h+='</ul></li>';
   }
   $('#tree').innerHTML=h||'<li class="row lvl1">Nada que mostrar</li>';
+  document.querySelectorAll('.sh').forEach(b=>b.onclick=e=>{e.stopPropagation();share(b.dataset.sh)});
   document.querySelectorAll('.row[data-k]').forEach(r=>r.onclick=e=>{const ul=r.nextElementSibling;const car=r.querySelector('.car');const willOpen=ul.hidden;
     if(e.target.closest('.car')||!r.dataset.go){ul.hidden=!willOpen;car.classList.toggle('open',willOpen);open[r.dataset.k]=willOpen;save();}
     else{open[r.dataset.k]=true;save();location.hash=r.dataset.go}});
@@ -87,5 +104,31 @@ const setSb=h=>{document.body.classList.toggle('nosb',h);try{localStorage.setIte
 try{if(localStorage.getItem('pv-nosb'))document.body.classList.add('nosb')}catch{}
 $('#sb').onclick=()=>setSb(!document.body.classList.contains('nosb'));
 addEventListener('keydown',e=>{if(e.key==='\\'&&!e.target.closest('input,select,textarea'))setSb(!document.body.classList.contains('nosb'))});
+/* compartir por carpeta (cliente entero o un diseño) */
+const toast=t=>{const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)};
+const copy=async t=>{try{await navigator.clipboard.writeText(t)}catch{const i=$('#lk');i&&(i.select(),document.execCommand('copy'))}toast('Enlace copiado')};
+async function api(m,sc,q=''){const r=await fetch('api/clients/'+sc+q,{method:m});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
+function share(sc){const s=shares[sc],[c,d]=sc.split('/');
+  const qué=d?`el diseño <b>${d}</b> de ${c} (todas sus versiones visibles)`:`la carpeta <b>${c}</b> completa (todos sus diseños, también los que subas después)`;
+  const otros=Object.values(shares).filter(x=>x.carpeta!==sc).sort((a,b)=>a.carpeta.localeCompare(b.carpeta));
+  $('#box').innerHTML=`<button class="x" data-a="close" aria-label="Cerrar">×</button><h2>Compartir ${d?'diseño':'carpeta'} · ${sc}</h2>
+  <p>Quien abra el enlace verá solo ${qué}, sin contraseña. No verá otros clientes ni las versiones ocultas.</p>
+  ${s?`<div class="lk"><input id="lk" readonly value="${s.link}"><button class="b p" data-a="copy">Copiar</button></div>
+  <p>Creado el ${new Date(s.createdAt).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'})}.</p>
+  <div class="acts"><button class="b" data-a="renew">Nuevo enlace (el actual deja de funcionar)</button><button class="b r" data-a="revoke">Revocar</button></div>`
+  :`<div class="acts"><button class="b p" data-a="create">Generar enlace</button></div>`}
+  ${otros.length?`<div class="all"><b>Otros enlaces activos</b>${otros.map(x=>`<div><span>${x.carpeta}</span><a data-a="go" data-sc="${x.carpeta}">Ver</a></div>`).join('')}</div>`:''}`;
+  $('#mod').hidden=false;
+  $('#box').onclick=async e=>{const a=e.target.closest('[data-a]')?.dataset.a;if(!a)return;
+    try{
+      if(a==='close')return $('#mod').hidden=true;
+      if(a==='copy')return copy(s.link);
+      if(a==='go')return share(e.target.dataset.sc);
+      if(a==='create'||a==='renew'){if(a==='renew'&&!confirm('El enlace actual dejará de funcionar para quien ya lo tenga. ¿Seguir?'))return;const j=await api('POST',sc,a==='renew'?'?renew=1':'');shares[sc]=j;render();share(sc);copy(j.link);}
+      if(a==='revoke'){if(!confirm('Nadie podrá entrar con este enlace. ¿Revocar?'))return;await api('DELETE',sc);delete shares[sc];render();share(sc);toast('Enlace revocado')}
+    }catch(err){alert('No se pudo: '+err.message)}};
+}
+$('#shb').onclick=()=>cur&&share(cur.c+'/'+cur.d);
+$('#mod').onclick=e=>{if(e.target.id==='mod')$('#mod').hidden=true};addEventListener('keydown',e=>{if(e.key==='Escape')$('#mod').hidden=true});
 addEventListener('hashchange',()=>{route()});load();
 </script></body></html>

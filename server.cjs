@@ -23,7 +23,8 @@ const safe = p => { const r = path.resolve(DATA, p); if (!r.startsWith(DATA + pa
 const readMeta = dir => { try { return JSON.parse(fs.readFileSync(path.join(dir, '.meta.json'), 'utf8')); } catch { return {}; } };
 
 // ---- galería (opcional con contraseña) + accesos por cliente ----
-// Accesos por cliente: data/.clients.json = { proba: { key, createdAt } }. Enlace /c/proba/<key> deja ver SOLO esa carpeta.
+// Accesos compartidos: data/.clients.json = { "proba": {key,createdAt}, "proba/s3-senda": {...} }.
+// La clave es la carpeta compartida (cliente entero o un diseño). Enlace /c/proba/<key> o /c/proba/s3-senda/<key>.
 const CLIENTS_FILE = path.join(DATA, '.clients.json');
 const readClients = () => { try { return JSON.parse(fs.readFileSync(CLIENTS_FILE, 'utf8')); } catch { return {}; } };
 const writeClients = o => fs.writeFileSync(CLIENTS_FILE, JSON.stringify(o, null, 1));
@@ -31,14 +32,18 @@ const h = s => crypto.createHash('sha256').update(String(s)).digest('hex').slice
 const viewCookie = () => h('view:' + VIEW_PASSWORD);
 const getCookie = (req, name) => { const c = (req.headers.cookie || '').split(';').map(s => s.trim()).find(s => s.startsWith(name + '=')); return c ? c.slice(name.length + 1) : ''; };
 const loginPage = (msg = '') => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Previews</title><body style="font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f6f6f4"><form method=post action=/login style="background:#fff;padding:32px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);display:grid;gap:12px;width:280px"><b>Lucuma Previews</b>${msg ? `<small style="color:#b00">${msg}</small>` : ''}<input name=p type=password placeholder="Contraseña" style="padding:10px;border:1px solid #ddd;border-radius:8px"><button style="padding:10px;border:0;border-radius:8px;background:#174FCA;color:#fff;font-weight:600">Entrar</button><small style="color:#777">Si eres cliente, usa el enlace que te compartimos.</small></form>`;
-// Determina qué puede ver la petición: 'all' (todo) | '<cliente>' (solo esa carpeta) | '' (nada)
+// Cookie pc = "carpeta:firma!carpeta:firma…" (un navegador puede tener varios enlaces abiertos). Formato viejo "proba:firma" sigue valiendo.
+const shareSig = (sc, key) => h('client:' + sc + ':' + key);
+const validShares = (req, o = readClients()) => getCookie(req, 'pc').split('!').map(it => { const i = it.lastIndexOf(':'); return i > 0 ? [it.slice(0, i), it.slice(i + 1)] : null; })
+  .filter(x => x && o[x[0]] && x[1] === shareSig(x[0], o[x[0]].key)).map(x => x[0]);
+const isOwner = req => !VIEW_PASSWORD || getCookie(req, 'pv') === viewCookie();
+// Qué puede ver la petición: 'all' (todo) | ['proba', 'kurtz/firmas'] (solo esas carpetas) | '' (nada)
 function scopeOf(req) {
-  if (!VIEW_PASSWORD) return 'all';                       // sin contraseña general: público (como antes)
-  if (getCookie(req, 'pv') === viewCookie()) return 'all';
-  const pc = getCookie(req, 'pc'); const i = pc.indexOf(':');
-  if (i > 0) { const cl = pc.slice(0, i), cli = readClients()[cl]; if (cli && pc.slice(i + 1) === h('client:' + cl + ':' + cli.key)) return cl; }
-  return '';
+  if (isOwner(req)) return 'all';                         // sin contraseña general: público (como antes)
+  const l = validShares(req); return l.length ? l : '';
 }
+const canC = (req, c) => req.scope === 'all' || req.scope.some(s => s === c || s.startsWith(c + '/'));
+const canD = (req, c, d) => req.scope === 'all' || req.scope.includes(c) || req.scope.includes(c + '/' + d);
 function viewAuth(req, res, next) {
   req.scope = scopeOf(req);
   const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
@@ -53,13 +58,16 @@ app.post('/login', express.urlencoded({ extended: false }), (req, res) => {
   if (VIEW_PASSWORD && req.body.p === VIEW_PASSWORD) { res.setHeader('Set-Cookie', `pv=${viewCookie()}; Path=/; HttpOnly; Max-Age=31536000; SameSite=Lax`); return res.redirect('/'); }
   res.status(401).send(loginPage('Contraseña incorrecta'));
 });
-// Enlace de cliente: /c/proba/<key> → cookie limitada a esa carpeta y redirige a la galería
-app.get('/c/:cliente/:key', (req, res) => {
-  const cl = slug(req.params.cliente), cli = readClients()[cl];
-  if (!cli || cli.key !== req.params.key) return res.status(404).send(loginPage('Enlace inválido o revocado'));
-  res.setHeader('Set-Cookie', `pc=${cl}:${h('client:' + cl + ':' + cli.key)}; Path=/; HttpOnly; Max-Age=31536000; SameSite=Lax`);
-  res.redirect('/#/' + cl);
-});
+// Enlace compartido: /c/proba/<key> (cliente) o /c/proba/<diseño>/<key> → suma esa carpeta a la cookie y abre la galería
+function openShare(req, res) {
+  const sc = [slug(req.params.cliente), req.params.diseno && slug(req.params.diseno)].filter(Boolean).join('/'), o = readClients(), sh = o[sc];
+  if (!sh || sh.key !== req.params.key) return res.status(404).send(loginPage('Enlace inválido o revocado'));
+  const l = [...new Set([...validShares(req, o), sc])].slice(-20);
+  res.setHeader('Set-Cookie', `pc=${l.map(x => x + ':' + shareSig(x, o[x].key)).join('!')}; Path=/; HttpOnly; Max-Age=31536000; SameSite=Lax`);
+  res.redirect('/#/' + sc);
+}
+app.get('/c/:cliente/:key', openShare);
+app.get('/c/:cliente/:diseno/:key', openShare);
 app.get('/health', (req, res) => res.json({ ok: true, data: DATA, auth: !!TOKEN, view: !!VIEW_PASSWORD, clients: Object.keys(readClients()).length }));
 app.use(viewAuth);
 
@@ -100,15 +108,22 @@ app.post('/api/push', pushAuth, express.raw({ type: '*/*', limit: MAX_MB + 'mb' 
     res.json({ ok: true, ...meta, url: `${url}/#/${cliente}/${diseno}/v${n}`, direct: `${url}/p/${cliente}/${diseno}/v${n}/${entry}` });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// Accesos por cliente (requieren PUSH_TOKEN)
-const clientLink = (req, cl, key) => `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}/c/${cl}/${key}`;
-app.get('/api/clients', pushAuth, (req, res) => { const o = readClients(); res.json(Object.entries(o).map(([cl, v]) => ({ cliente: cl, createdAt: v.createdAt, link: clientLink(req, cl, v.key) }))); });
-app.post('/api/clients/:cliente', pushAuth, (req, res) => {       // crea (o regenera con ?renew=1) el enlace de un cliente
-  const cl = slug(req.params.cliente); if (!cl) return res.status(400).json({ error: 'cliente inválido' });
-  const o = readClients(); if (!o[cl] || req.query.renew === '1') o[cl] = { key: crypto.randomBytes(18).toString('base64url'), createdAt: new Date().toISOString() };
-  writeClients(o); res.json({ ok: true, cliente: cl, link: clientLink(req, cl, o[cl].key), viewPassword: !!VIEW_PASSWORD });
+// Enlaces compartidos por carpeta (cliente o diseño). Los gestiona el dueño: PUSH_TOKEN o sesión con VIEW_PASSWORD desde la galería.
+function ownerAuth(req, res, next) {
+  const t = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if ((TOKEN && t === TOKEN) || (VIEW_PASSWORD && getCookie(req, 'pv') === viewCookie())) return next();
+  res.status(401).json({ error: 'solo el dueño gestiona enlaces' });
+}
+const shareLink = (req, sc, key) => `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}/c/${sc}/${key}`;
+const shareOut = (req, sc, v) => ({ carpeta: sc, cliente: sc.split('/')[0], diseno: sc.split('/')[1] || null, createdAt: v.createdAt, link: shareLink(req, sc, v.key) });
+const scOf = req => [slug(req.params.cliente), req.params.diseno && slug(req.params.diseno)].filter(Boolean).join('/');
+app.get('/api/clients', ownerAuth, (req, res) => { const o = readClients(); res.json(Object.entries(o).map(([sc, v]) => shareOut(req, sc, v))); });
+app.post('/api/clients/:cliente{/:diseno}', ownerAuth, (req, res) => {       // crea (o regenera con ?renew=1) el enlace de una carpeta
+  const sc = scOf(req); if (!slug(req.params.cliente)) return res.status(400).json({ error: 'carpeta inválida' });
+  const o = readClients(); if (!o[sc] || req.query.renew === '1') o[sc] = { key: crypto.randomBytes(18).toString('base64url'), createdAt: new Date().toISOString() };
+  writeClients(o); res.json({ ok: true, ...shareOut(req, sc, o[sc]), viewPassword: !!VIEW_PASSWORD });
 });
-app.delete('/api/clients/:cliente', pushAuth, (req, res) => { const o = readClients(); delete o[slug(req.params.cliente)]; writeClients(o); res.json({ ok: true }); });
+app.delete('/api/clients/:cliente{/:diseno}', ownerAuth, (req, res) => { const o = readClients(); delete o[scOf(req)]; writeClients(o); res.json({ ok: true }); });
 app.delete('/api/:cliente/:diseno{/:v}', pushAuth, (req, res) => {
   try { const p = safe(path.join(slug(req.params.cliente), slug(req.params.diseno), req.params.v ? slug(req.params.v) : '')); fs.rmSync(p, { recursive: true, force: true }); res.json({ ok: true }); }
   catch (e) { res.status(400).json({ error: e.message }); }
@@ -120,9 +135,9 @@ app.patch('/api/:cliente/:diseno/:v', pushAuth, express.json(), (req, res) => {
 // Listado (árbol) para la galería (filtrado según el acceso)
 app.get('/api/list', (req, res) => {
   const tree = [];
-  for (const c of fs.readdirSync(DATA, { withFileTypes: true }).filter(d => d.isDirectory() && !d.name.startsWith('.') && (req.scope === 'all' || d.name === req.scope))) {
+  for (const c of fs.readdirSync(DATA, { withFileTypes: true }).filter(d => d.isDirectory() && !d.name.startsWith('.') && canC(req, d.name))) {
     const disenos = [];
-    for (const d of fs.readdirSync(path.join(DATA, c.name), { withFileTypes: true }).filter(x => x.isDirectory())) {
+    for (const d of fs.readdirSync(path.join(DATA, c.name), { withFileTypes: true }).filter(x => x.isDirectory() && canD(req, c.name, x.name))) {
       const vs = fs.readdirSync(path.join(DATA, c.name, d.name)).filter(v => /^v\d+$/.test(v)).sort((a, b) => +b.slice(1) - +a.slice(1))
         .map(v => ({ v, ...readMeta(path.join(DATA, c.name, d.name, v)) })).filter(v => req.scope === 'all' || !v.oculta);  // versiones ocultas: solo las ve el dueño
       if (vs.length) disenos.push({ diseno: d.name, versiones: vs, updatedAt: vs[0].createdAt });
@@ -131,10 +146,10 @@ app.get('/api/list', (req, res) => {
     if (disenos.length) tree.push({ cliente: c.name, disenos, updatedAt: disenos[0].updatedAt });
   }
   tree.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-  res.json({ scope: req.scope, tree });
+  res.json({ scope: req.scope === 'all' ? 'all' : 'shared', canShare: req.scope === 'all' && !!VIEW_PASSWORD, tree });
 });
 // Archivos de cada versión
-app.use('/p', (req, res, next) => { if (req.scope === 'all') return next(); const [, c, d, v] = req.path.split('/'); if (c !== req.scope) return res.status(403).send('Sin acceso a esta carpeta'); try { if (d && v && readMeta(safe(path.join(c, d, v))).oculta) return res.status(403).send('Versión no disponible'); } catch { } next(); });
+app.use('/p', (req, res, next) => { if (req.scope === 'all') return next(); const [, c, d, v] = req.path.split('/'); if (!c || !d || !canD(req, c, d)) return res.status(403).send('Sin acceso a esta carpeta'); try { if (d && v && readMeta(safe(path.join(c, d, v))).oculta) return res.status(403).send('Versión no disponible'); } catch { } next(); });
 app.use('/p', express.static(DATA, { index: ['index.html'], dotfiles: 'deny', extensions: ['html'] }));
 // Galería
 app.use(express.static(path.join(__dirname, 'public')));
