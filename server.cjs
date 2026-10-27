@@ -91,7 +91,7 @@ app.post('/api/push', pushAuth, express.raw({ type: '*/*', limit: MAX_MB + 'mb' 
     const dir = path.join(base, 'v' + n);
     fs.mkdirSync(dir, { recursive: true });
     const zip = new AdmZip(req.body);
-    let files = 0, htmls = [];
+    let files = 0, htmls = [], pdfs = [];
     for (const e of zip.getEntries()) {
       if (e.isDirectory) continue;
       const name = e.entryName.replace(/\\/g, '/');
@@ -99,10 +99,11 @@ app.post('/api/push', pushAuth, express.raw({ type: '*/*', limit: MAX_MB + 'mb' 
       const out = path.resolve(dir, name); if (!out.startsWith(dir + path.sep)) continue;
       fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, e.getData()); files++;
       if (/\.html?$/i.test(name)) htmls.push(name);
+      if (/\.pdf$/i.test(name)) pdfs.push(name);
     }
     htmls.sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b));
     let entry = req.query.entry && htmls.includes(req.query.entry) ? req.query.entry : (htmls.find(h => /(^|\/)index\.html$/.test(h)) || htmls[0] || '');
-    const meta = { cliente, diseno, version: n, nota: String(req.query.nota || ''), titulo: String(req.query.titulo || ''), entry, htmls, files, createdAt: new Date().toISOString() };
+    const meta = { cliente, diseno, version: n, nota: String(req.query.nota || ''), titulo: String(req.query.titulo || ''), entry, htmls, pdfs, files, createdAt: new Date().toISOString() };
     fs.writeFileSync(path.join(dir, '.meta.json'), JSON.stringify(meta, null, 1));
     const url = `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}`;
     res.json({ ok: true, ...meta, url: `${url}/#/${cliente}/${diseno}/v${n}`, direct: `${url}/p/${cliente}/${diseno}/v${n}/${entry}` });
