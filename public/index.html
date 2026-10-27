@@ -16,16 +16,16 @@ nav{overflow:auto;flex:1;padding:8px 0 30px}
 .lvl2{padding-left:28px}.lvl3{padding-left:48px;font-size:13px}.lvl4{padding-left:60px;font-size:12.5px;color:var(--g);font-weight:600}.lvl5{padding-left:80px;font-size:12.5px}
 .lvl4 .ic{width:14px;height:14px}.lvl5 .ic{width:14px;height:14px}
 ul[hidden]{display:none}
-main{display:flex;flex-direction:column;min-height:0;height:100%}
+main{display:flex;flex-direction:column;min-height:0;min-width:0;height:100%}
 .bar{background:#fff;border-bottom:1px solid var(--ln);padding:10px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .bar h1{font-size:15px;font-weight:700}.bar .nota{color:var(--g);font-size:12.5px}
 .bar select,.bar button,.bar a.btn{font:inherit;font-size:13px;padding:7px 12px;border:1px solid var(--ln);border-radius:8px;background:#fff;cursor:pointer;color:var(--n);text-decoration:none;max-width:360px}
 .bar button.on{background:var(--n);color:#fff;border-color:var(--n)}.bar .sp{flex:1}.bar a.btn.p{background:var(--b);color:#fff;border-color:var(--b)}
 .dev{display:flex;gap:4px}
 .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
-.frame{flex:none;background:#fff;border:1px solid var(--ln);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.08);overflow:hidden;transition:width .3s,height .3s}
-.frame iframe{width:100%;height:100%;border:0;display:block}
-.frame.desktop{width:100%;height:100%}.frame.tablet{width:820px;height:1180px;max-height:100%;max-width:100%}.frame.mobile{width:390px;height:844px;max-height:100%;max-width:100%}
+.frame{flex:none;background:#fff;border:1px solid var(--ln);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.08);overflow:hidden;position:relative}
+.frame iframe{border:0;display:block;transform-origin:0 0;position:absolute;top:0;left:0}
+.ti{min-width:0}.ctl{display:contents}.scrim{display:none}
 .empty{color:var(--g);text-align:center;max-width:420px;line-height:1.6}.empty code{background:#fff;padding:2px 6px;border-radius:4px;font-size:12px}
 body.nosb{grid-template-columns:1fr}body.nosb aside{display:none}#barc{display:contents}#barc[hidden]{display:none}
 #sb svg{width:16px;height:16px;display:block}
@@ -41,11 +41,27 @@ body.nosb{grid-template-columns:1fr}body.nosb aside{display:none}#barc{display:c
 .acts{display:flex;gap:8px;flex-wrap:wrap}.all{border-top:1px solid var(--ln);padding-top:12px;display:grid;gap:6px}.all b{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--g)}
 .all div{display:flex;align-items:center;gap:8px;font-size:12.5px}.all div span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.all div a{color:var(--b);cursor:pointer;font-weight:600}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--n);color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;z-index:10}
-@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}aside{max-height:42vh}body.nosb{grid-template-rows:1fr}}
+@media(max-width:800px){
+  body,body.nosb{grid-template-columns:minmax(0,1fr);grid-template-rows:100%}
+  .bar{min-width:0}
+  aside,body.nosb aside{display:flex;position:fixed;top:0;left:0;bottom:0;width:min(86vw,340px);z-index:8;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.15)}
+  body.sbopen aside{transform:none}
+  .scrim{position:fixed;inset:0;background:rgba(21,23,28,.35);z-index:7}body.sbopen .scrim{display:block}
+  .row{padding:10px 12px}
+  .bar{padding:8px 10px;gap:8px}.bar h1{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bar .nota{display:none}
+  .ti{flex:1 1 0}
+  #barc{display:contents}
+  .ctl{display:flex;gap:6px;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}.ctl::-webkit-scrollbar{display:none}
+  .ctl>*{flex:none}.ctl .sp{display:none}
+  .bar select,.bar button,.bar a.btn{font-size:12.5px;padding:7px 10px;max-width:220px}
+  .stage{padding:0}
+  .frame{border:0;border-radius:0;box-shadow:none}
+  .empty{padding:24px}
+}
 </style></head><body>
 <aside><div class="brand"><i>LA</i>Lucuma Previews</div><div class="search"><input id="q" placeholder="Buscar cliente, diseño o archivo…"></div><nav><ul class="tree" id="tree"></ul></nav></aside>
-<main><div class="bar" id="bar"><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div id="barc" hidden><div><h1 id="t"></h1><div class="nota" id="nota"></div></div><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><button id="shb" title="Generar enlace para compartir este diseño">Compartir</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div></div>
-<div class="stage"><div class="empty" id="empty">Sin diseños todavía.<br>Sube uno con <code>node push.js cliente diseño carpeta</code> o <code>POST /api/push</code>.</div><div class="frame desktop" id="frame" hidden><iframe id="if"></iframe></div></div></main>
+<main><div class="bar" id="bar"><button id="sb" title="Ocultar/mostrar panel (tecla \)" aria-label="Ocultar/mostrar panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button><div id="barc" hidden><div class="ti"><h1 id="t"></h1><div class="nota" id="nota"></div></div><div class="ctl"><select id="ver"></select><select id="entry"></select><span class="sp"></span><div class="dev"><button data-d="desktop" class="on">Desktop</button><button data-d="tablet">Tablet</button><button data-d="mobile">Móvil</button></div><button id="back" title="Atrás">←</button><button id="reload" title="Recargar">↻</button><button id="shb" title="Generar enlace para compartir este diseño">Compartir</button><a class="btn p" id="open" target="_blank">Abrir en pestaña</a></div></div></div>
+<div class="stage"><div class="empty" id="empty">Sin diseños todavía.<br>Sube uno con <code>node push.js cliente diseño carpeta</code> o <code>POST /api/push</code>.</div><div class="frame" id="frame" hidden><iframe id="if"></iframe></div></div></main><div class="scrim" id="scrim"></div>
 <div class="mod" id="mod" hidden><div class="box" id="box"></div></div>
 <script>
 const $=s=>document.querySelector(s);const CAR='<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"/></svg>';
@@ -99,10 +115,21 @@ const src=`p/${c}/${cur.d}/${v.v}/${entry}`;$('#open').href=src;if(src!==lastSrc
 $('#if').addEventListener('load',()=>{try{const p=$('#if').contentWindow.location.pathname;const m=p.match(/\/p\/([^/]+)\/([^/]+)\/(v\d+)\/(.*)$/);if(!m)return;const f=decodeURIComponent(m[4]);if(cur&&cur.c===m[1]&&cur.d===m[2]&&cur.v.v===m[3]&&cur.entry===f)return;lastSrc=`p/${m[1]}/${m[2]}/${m[3]}/${f}`;location.hash=`#/${m[1]}/${m[2]}/${m[3]}/${f}`}catch{}});
 $('#ver').onchange=e=>location.hash=`#/${cur.c}/${cur.d}/${e.target.value}`;$('#entry').onchange=e=>location.hash=`#/${cur.c}/${cur.d}/${cur.v.v}/${e.target.value}`;
 $('#reload').onclick=()=>{$('#if').contentWindow.location.reload()};$('#back').onclick=()=>{try{$('#if').contentWindow.history.back()}catch{}};$('#q').oninput=render;
-document.querySelectorAll('.dev button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.dev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#frame').className='frame '+b.dataset.d});
+/* dispositivo: el iframe se dibuja al ancho real del dispositivo y se escala para caber (en el teléfono, Desktop y Tablet se ven reducidos) */
+const isPhone=()=>matchMedia('(max-width:800px)').matches;
+let dev=isPhone()?'mobile':'desktop';
+const DEV={desktop:[1280,0],tablet:[820,1180],mobile:[390,844]};
+function fit(){const st=$('.stage'),cs=getComputedStyle(st),W=st.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),H=st.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);if(W<=0||H<=0)return;
+  let [dw,dh]=DEV[dev];if(dev==='desktop'&&W>=1024)dw=W;if(dev==='mobile'&&W<=500)dw=W;
+  const s=Math.min(1,W/dw),fh=(dev==='desktop'||isPhone())?H:Math.min(H,dh*s);
+  const f=$('#frame'),i=$('#if');f.style.width=dw*s+'px';f.style.height=fh+'px';i.style.width=dw+'px';i.style.height=fh/s+'px';i.style.transform=s<1?`scale(${s})`:'';}
+document.querySelectorAll('.dev button').forEach(b=>{b.classList.toggle('on',b.dataset.d===dev);b.onclick=()=>{document.querySelectorAll('.dev button').forEach(x=>x.classList.remove('on'));b.classList.add('on');dev=b.dataset.d;fit()}});
+new ResizeObserver(fit).observe($('.stage'));
 const setSb=h=>{document.body.classList.toggle('nosb',h);try{localStorage.setItem('pv-nosb',h?'1':'')}catch{}};
 try{if(localStorage.getItem('pv-nosb'))document.body.classList.add('nosb')}catch{}
-$('#sb').onclick=()=>setSb(!document.body.classList.contains('nosb'));
+const drawer=o=>document.body.classList.toggle('sbopen',o);
+$('#sb').onclick=()=>isPhone()?drawer(!document.body.classList.contains('sbopen')):setSb(!document.body.classList.contains('nosb'));
+$('#scrim').onclick=()=>drawer(false);
 addEventListener('keydown',e=>{if(e.key==='\\'&&!e.target.closest('input,select,textarea'))setSb(!document.body.classList.contains('nosb'))});
 /* compartir por carpeta (cliente entero o un diseño) */
 const toast=t=>{const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800)};
@@ -129,6 +156,7 @@ function share(sc){const s=shares[sc],[c,d]=sc.split('/');
     }catch(err){alert('No se pudo: '+err.message)}};
 }
 $('#shb').onclick=()=>cur&&share(cur.c+'/'+cur.d);
-$('#mod').onclick=e=>{if(e.target.id==='mod')$('#mod').hidden=true};addEventListener('keydown',e=>{if(e.key==='Escape')$('#mod').hidden=true});
-addEventListener('hashchange',()=>{route()});load();
+$('#mod').onclick=e=>{if(e.target.id==='mod')$('#mod').hidden=true};addEventListener('keydown',e=>{if(e.key==='Escape')$('#mod').hidden=true;drawer(false)});
+addEventListener('hashchange',()=>{route();if(isPhone()&&cur)drawer(false)});
+load().then(()=>{if(isPhone()&&!cur)drawer(true);fit()});
 </script></body></html>
