@@ -3,6 +3,7 @@
 // Uso: node push.js <cliente> <diseño> <carpeta> [--nota "texto"] [--titulo "Nombre"] [--entry index.html] [--replace] [--pdf archivo.pdf]
 //      --pdf adjunta ese PDF a la versión (la galería muestra "Descargar PDF"); se puede repetir. Los PDF sueltos de la carpeta se siguen omitiendo.
 //      node push.js acceso <cliente>[/<diseño>] [--renew] · accesos · revocar <cliente>[/<diseño>]   (enlace que deja ver solo esa carpeta)
+//      node push.js publicar|despublicar <cliente> <diseño> <vN>   (esa versión se abre en /p/ sin clave; el resto sigue privado)
 //      node push.js ocultar|mostrar <cliente> <diseño> <vN>   (versión invisible para el cliente, el dueño la sigue viendo)
 // Config: ~/.previews.env con PREVIEWS_URL=https://... y PREVIEWS_TOKEN=...
 const fs = require('fs'), path = require('path'), os = require('os');
@@ -18,6 +19,7 @@ const api = (m, p) => fetch(URL_ + p, { method: m, headers: { Authorization: 'Be
 if (pos[0] === 'acceso' && pos[1]) { api('POST', `/api/clients/${pos[1]}${opt.renew ? '?renew=1' : ''}`).then(j => console.log(`✔ Enlace para ${j.carpeta} (ve solo esa carpeta):\n   ${j.link}` + (j.viewPassword ? '' : '\n   ⚠ VIEW_PASSWORD no está definida en Plesk: la galería sigue siendo pública para todos.'))).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 if (pos[0] === 'accesos') { api('GET', '/api/clients').then(l => console.log(l.length ? l.map(c => `${c.carpeta}  ${c.link}  (${c.createdAt.slice(0, 10)})`).join('\n') : '(sin accesos)')).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 if (pos[0] === 'revocar' && pos[1]) { api('DELETE', `/api/clients/${pos[1]}`).then(() => console.log(`✔ Acceso de ${pos[1]} revocado`)).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
+if ((pos[0] === 'publicar' || pos[0] === 'despublicar') && pos[3]) { fetch(`${URL_}/api/${pos[1]}/${pos[2]}/${pos[3]}`, { method: 'PATCH', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ publica: pos[0] === 'publicar' }) }).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); console.log(`✔ ${pos[1]}/${pos[2]} ${pos[3]} ${j.publica ? 'PÚBLICA: ' + URL_ + '/p/' + pos[1] + '/' + pos[2] + '/' + pos[3] + '/' + (j.entry || 'index.html') : 'privada otra vez'}`); }).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 if ((pos[0] === 'ocultar' || pos[0] === 'mostrar') && pos[3]) { fetch(`${URL_}/api/${pos[1]}/${pos[2]}/${pos[3]}`, { method: 'PATCH', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ oculta: pos[0] === 'ocultar' }) }).then(async r => { const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); console.log(`✔ ${pos[1]}/${pos[2]} ${pos[3]} ${j.oculta ? 'oculta para el cliente' : 'visible'}`); }).catch(e => { console.error('✖', e.message); process.exit(1); }); return; }
 const [cliente, diseno, folder] = pos;
 if (!folder) { console.error('Uso: node push.js <cliente> <diseño> <carpeta> [--nota ..] [--titulo ..] [--entry ..] [--replace]'); process.exit(1); }

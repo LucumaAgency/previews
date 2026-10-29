@@ -44,11 +44,14 @@ function scopeOf(req) {
 }
 const canC = (req, c) => req.scope === 'all' || req.scope.some(s => s === c || s.startsWith(c + '/'));
 const canD = (req, c, d) => req.scope === 'all' || req.scope.includes(c) || req.scope.includes(c + '/' + d);
+// Versión pública: .meta.json con publica:true → su /p/<cliente>/<diseño>/<vN>/… se abre sin clave (solo esa versión).
+const isPublicPath = p => { try { p = decodeURIComponent(p); } catch { return false; } if (p.includes('..') || p.includes('\\')) return false; const m = p.match(/^\/p\/([^/]+)\/([^/]+)\/(v\d+)(\/|$)/); if (!m) return false; try { const meta = readMeta(safe(path.join(m[1], m[2], m[3]))); return !!meta.publica && !meta.oculta; } catch { return false; } };
 function viewAuth(req, res, next) {
   req.scope = scopeOf(req);
   const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (TOKEN && bearer === TOKEN) req.scope = 'all';          // la API con token (push.js, accesos) siempre pasa
   if (req.scope) return next();
+  if (req.method === 'GET' && isPublicPath(req.path)) { req.scope = 'public'; return next(); }   // versión marcada pública
   if (req.method === 'POST' && req.path === '/login') return next();
   if (req.method === 'GET' && req.path.startsWith('/c/')) return next();   // enlaces de cliente
   if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'no autorizado' });
@@ -130,7 +133,7 @@ app.delete('/api/:cliente/:diseno{/:v}', pushAuth, (req, res) => {
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 app.patch('/api/:cliente/:diseno/:v', pushAuth, express.json(), (req, res) => {
-  try { const d = safe(path.join(slug(req.params.cliente), slug(req.params.diseno), slug(req.params.v))); const m = readMeta(d); Object.assign(m, { nota: req.body.nota ?? m.nota, titulo: req.body.titulo ?? m.titulo, entry: req.body.entry ?? m.entry, oculta: req.body.oculta ?? m.oculta }); fs.writeFileSync(path.join(d, '.meta.json'), JSON.stringify(m, null, 1)); res.json({ ok: true, ...m }); }
+  try { const d = safe(path.join(slug(req.params.cliente), slug(req.params.diseno), slug(req.params.v))); const m = readMeta(d); Object.assign(m, { nota: req.body.nota ?? m.nota, titulo: req.body.titulo ?? m.titulo, entry: req.body.entry ?? m.entry, oculta: req.body.oculta ?? m.oculta, publica: req.body.publica ?? m.publica }); fs.writeFileSync(path.join(d, '.meta.json'), JSON.stringify(m, null, 1)); res.json({ ok: true, ...m }); }
   catch (e) { res.status(400).json({ error: e.message }); }
 });
 // Listado (árbol) para la galería (filtrado según el acceso)
@@ -150,7 +153,7 @@ app.get('/api/list', (req, res) => {
   res.json({ scope: req.scope === 'all' ? 'all' : 'shared', canShare: req.scope === 'all' && !!VIEW_PASSWORD, tree });
 });
 // Archivos de cada versión
-app.use('/p', (req, res, next) => { if (req.scope === 'all') return next(); const [, c, d, v] = req.path.split('/'); if (!c || !d || !canD(req, c, d)) return res.status(403).send('Sin acceso a esta carpeta'); try { if (d && v && readMeta(safe(path.join(c, d, v))).oculta) return res.status(403).send('Versión no disponible'); } catch { } next(); });
+app.use('/p', (req, res, next) => { if (req.scope === 'all' || req.scope === 'public') return next(); const [, c, d, v] = req.path.split('/'); if (!c || !d || !canD(req, c, d)) return res.status(403).send('Sin acceso a esta carpeta'); try { if (d && v && readMeta(safe(path.join(c, d, v))).oculta) return res.status(403).send('Versión no disponible'); } catch { } next(); });
 app.use('/p', express.static(DATA, { index: ['index.html'], dotfiles: 'deny', extensions: ['html'] }));
 // Galería
 app.use(express.static(path.join(__dirname, 'public')));
